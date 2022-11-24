@@ -6,6 +6,8 @@ player1: public(address)
 player0Choice: public(uint256)
 player1Choice: public(uint256)
 
+
+
 player0ChoiceMade: public(bool)
 player1ChoiceMade: public(bool)
 
@@ -49,12 +51,6 @@ def reveal():
         else:
             self.winner = ZERO_ADDRESS
    
-
-    self.player0ChoiceMade = False
-    self.player1ChoiceMade = False
-
-    self.player0Choice = 0
-    self.player1Choice = 0
 
 
 
