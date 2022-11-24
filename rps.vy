@@ -13,11 +13,9 @@ player1ChoiceMade: public(bool)
 
 winner: public(address)
 
-choice_legend: public(HashMap[uint256, String[10]])
+choice_legend: public(HashMap[uint256, String[10]]) 
 player0choice_legend: public(String[10])
 player1choice_legend: public(String[10])
-
-
 
 
 
@@ -31,14 +29,18 @@ def __init__(_player1: address):
 
 
 
+
+
 @external
 def makeChoice(_choice: uint256):
     if msg.sender == self.player0:
         self.player0Choice = _choice
         self.player0ChoiceMade = True
+        self.player0choice_legend = self.choice_legend[_choice] 
     elif msg.sender == self.player1:
         self.player1Choice = _choice
         self.player1ChoiceMade = True
+        self.player1choice_legend = self.choice_legend[_choice]
 
 
 # calculate store and winner address
@@ -59,8 +61,20 @@ def reveal():
             self.winner = self.player1
         elif self.player0Choice == 2 and self.player1Choice == 1:
             self.winner = self.player0
+        elif self.player1Choice == 0 and self.player0Choice == 2:
+            self.winner = self.player1
+        elif self.player1Choice == 0 and self.player0Choice == 1:
+            self.winner = self.player0
+        elif self.player1Choice == 1 and self.player0Choice == 0:
+            self.winner = self.player1
+        elif self.player1Choice == 1 and self.player0Choice == 2:
+            self.winner = self.player0
+        elif self.player1Choice == 2 and self.player0Choice == 0:
+            self.winner = self.player0
+        elif self.player1Choice == 2 and self.player0Choice == 1:
+            self.winner = self.player1
         else:
-            self.winner = ZERO_ADDRESS        
+            self.winner = ZERO_ADDRESS          
    
 
 
