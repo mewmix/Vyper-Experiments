@@ -17,6 +17,8 @@ choice_legend: public(HashMap[uint256, String[10]])
 player0choice_legend: public(String[10])
 player1choice_legend: public(String[10])
 
+deposit_balance: public(uint256)
+
 
 
 @external
@@ -29,6 +31,19 @@ def __init__(_player1: address):
 
 
 
+@external
+@payable
+def deposit():
+    self.deposit_balance += msg.value
+
+
+@external
+@payable
+def reward():
+    assert msg.sender == self.winner
+    send(msg.sender, self.deposit_balance)
+    self.deposit_balance = 0
+   
 
 
 @external
@@ -77,11 +92,10 @@ def reveal():
             self.winner = ZERO_ADDRESS          
    
 
-
 @internal
 def _resetChoices():
-    self.player0Choice = 0
-    self.player1Choice = 0
+    self.player0Choice = 4
+    self.player1Choice = 4
     self.player0ChoiceMade = False
     self.player1ChoiceMade = False
 
@@ -90,7 +104,6 @@ def _resetChoices():
 def kill():
     assert msg.sender == self.player0 or msg.sender == self.player1
     selfdestruct(msg.sender)
-
 
 
 
