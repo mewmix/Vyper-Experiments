@@ -13,11 +13,22 @@ player1ChoiceMade: public(bool)
 
 winner: public(address)
 
+choice_legend: public(HashMap[uint256, String[10]])
+player0choice_legend: public(String[10])
+player1choice_legend: public(String[10])
+
+
+
+
 
 @external
 def __init__(_player1: address):
     self.player0 = msg.sender
     self.player1 = _player1
+    self.choice_legend[0] = "Rock"
+    self.choice_legend[1] = "Paper"
+    self.choice_legend[2] = "Scissors"
+
 
 
 @external
@@ -49,10 +60,8 @@ def reveal():
         elif self.player0Choice == 2 and self.player1Choice == 1:
             self.winner = self.player0
         else:
-            self.winner = ZERO_ADDRESS
+            self.winner = ZERO_ADDRESS        
    
-
-
 
 
 @internal
@@ -67,3 +76,8 @@ def _resetChoices():
 def kill():
     assert msg.sender == self.player0 or msg.sender == self.player1
     selfdestruct(msg.sender)
+
+
+
+
+
