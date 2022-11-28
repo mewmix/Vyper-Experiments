@@ -34,7 +34,8 @@ print(f'Attempting to deposit from account: { account_from["address"] }')
 
 # deposit
 
-tx_dict = contract.functions.deposit().buildTransaction({
+def deposit(web3, account_from, contract):
+    tx_dict = contract.functions.deposit().buildTransaction({
     'from': account_from['address'],
     'nonce': web3.eth.getTransactionCount(account_from['address']),
     'gas': 2000000,
@@ -46,29 +47,32 @@ tx_dict = contract.functions.deposit().buildTransaction({
 
 # sign transaction
 
-signed_txn = web3.eth.account.signTransaction(tx_dict, private_key=account_from['private_key'])
+    signed_txn = web3.eth.account.signTransaction(tx_dict, private_key=account_from['private_key'])
 
 # send transaction
 
-tx_hash = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
+    tx_hash = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
 
 # get transaction receipt
 
-tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
+    tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
 
 #print block explorer with tx hash to check transaction
 
-print(f'View transaction at: https://explorer-mumbai.maticvigil.com/tx/{tx_hash.hex()}')
+    print(f'View transaction at: https://explorer-mumbai.maticvigil.com/tx/{tx_hash.hex()}')
 
 
-print(f'https://mumbai.polygonscan.com/tx/{tx_receipt}')
+    print(f'https://mumbai.polygonscan.com/tx/{tx_receipt}')
 
-print(f'Deposit successful at address: { contract.address }')
+    print(f'Deposit successful at address: { contract.address }')
+
+#deposit(web3, account_from, contract)
+
 #
 
 # make choice if 0 = rock 1 = paper and 2 = scissors
 
-choice = 0
+choice = int(input("Enter your choice 0-Rock 1-Paper 2-Scissors: "))
 
 ## variable to print for choice made
 
@@ -113,6 +117,46 @@ print(f'Made choice {choice_print} at address: { contract.address }')
 print(f'View transaction at: https://explorer-mumbai.maticvigil.com/tx/{tx_hash.hex()}')
 
 
+# reveal
+
+def reveal(web3, account_from, contract):
+    print(f'Attempting to reveal from account: { account_from["address"] }')
+
+# reveal
+
+    tx_dict = contract.functions.reveal().buildTransaction({
+    'from': account_from['address'],
+    'nonce': web3.eth.getTransactionCount(account_from['address']),
+    'gas': 2000000,
+    'gasPrice': web3.toWei('30', 'gwei'),
+})
+
+# sign transaction
+
+    signed_txn = web3.eth.account.signTransaction(tx_dict, private_key=account_from['private_key'])
+
+# send transaction
+
+    tx_hash = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
+
+# get transaction receipt
+
+    tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
+
+    print(f'Reveal successful at address: { contract.address }')
+
+# print block explorer with tx hash to check transaction
+
+    print(f'View transaction at: https://explorer-mumbai.maticvigil.com/tx/{tx_hash.hex()}')
+
+# get winner
+
+    winner = contract.functions.winner().call()
+
+    print(f'Winner is: {winner}')
+
+
+
 
 # check if both players have made a choice
 
@@ -131,6 +175,8 @@ player1ChoiceMade = contract.functions.player1ChoiceMade().call()
 if player0ChoiceMade == True and player1ChoiceMade == True:
 
     print(f'Both players have made a choice')
+    reveal(web3, account_from, contract)
+
     
 
 else:
@@ -140,42 +186,7 @@ else:
 
 
 
-# reveal
 
-print(f'Attempting to reveal from account: { account_from["address"] }')
-
-# reveal
-
-tx_dict = contract.functions.reveal().buildTransaction({
-    'from': account_from['address'],
-    'nonce': web3.eth.getTransactionCount(account_from['address']),
-    'gas': 2000000,
-    'gasPrice': web3.toWei('30', 'gwei'),
-})
-
-# sign transaction
-
-signed_txn = web3.eth.account.signTransaction(tx_dict, private_key=account_from['private_key'])
-
-# send transaction
-
-tx_hash = web3.eth.sendRawTransaction(signed_txn.rawTransaction)
-
-# get transaction receipt
-
-tx_receipt = web3.eth.waitForTransactionReceipt(tx_hash)
-
-print(f'Reveal successful at address: { contract.address }')
-
-# print block explorer with tx hash to check transaction
-
-print(f'View transaction at: https://explorer-mumbai.maticvigil.com/tx/{tx_hash.hex()}')
-
-# get winner
-
-winner = contract.functions.winner().call()
-
-print(f'Winner is: {winner}')
 
 
 
