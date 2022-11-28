@@ -71,7 +71,7 @@ def makeChoice(_choice: uint256):
 def reveal():
     if self.player0ChoiceMade and self.player1ChoiceMade:
         if self.player0Choice == self.player1Choice:
-            self.winner = ZERO_ADDRESS
+            self.winner = empty(address)
             self._resetChoices()
         elif self.player0Choice == 0 and self.player1Choice == 1:
             self.winner = self.player1
@@ -120,7 +120,7 @@ def reveal():
             self._resetChoices()
             self.reward()
         else:
-            self.winner = ZERO_ADDRESS
+            self.winner = empty(address)
             self._resetChoices()
                       
    
@@ -131,7 +131,6 @@ def reveal():
 def kill():
     assert msg.sender == self.player0 or msg.sender == self.player1
     selfdestruct(msg.sender)
-
 
 
 
