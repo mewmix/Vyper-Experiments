@@ -1,6 +1,6 @@
 
 from web3 import Web3
-from web3.middleware import geth_poa_middleware
+#from web3.middleware import geth_poa_middleware
 
 
 
@@ -10,12 +10,11 @@ abi = [{"name": "Transfer", "inputs": [{"name": "sender", "type": "address", "in
 
 
 provider_rpc = {
-    'development': 'https://matic-mumbai.chainstacklabs.com',
+    'development': 'https://testnet.telos.net/evm',
     'alphanet': '',
 }
 web3 = Web3(Web3.HTTPProvider(provider_rpc['development']))  # Change to correct network
-web3.middleware_onion.inject(geth_poa_middleware, layer=0)
-
+#web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
 
@@ -23,7 +22,7 @@ web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 ## load contract from address
 
-contract_address = '0x2219854cb694B74559810bfbb22d451264911c72' # Put your contract's address here
+contract_address = '0x9F52e0D9c0d3AE631Db4DE3eD69e12A5C4284a70' # Put your contract's address here
 
 contract = web3.eth.contract(address=contract_address, abi=abi)
 
@@ -35,8 +34,7 @@ def deposit(web3, account_from, contract):
     tx_dict = contract.functions.deposit().buildTransaction({
     'from': account_from['address'],
     'nonce': web3.eth.getTransactionCount(account_from['address']),
-    'gas': 2000000,
-    'gasPrice': web3.toWei('30', 'gwei'),
+    'gasPrice': web3.toWei('505', 'gwei'),
     'value': web3.toWei('0.01', 'ether'),
 })
 
@@ -90,8 +88,7 @@ print(f'Attempting to make choice {choice_print} from account: { account_from["a
 tx_dict = contract.functions.makeChoice(choice).buildTransaction({
     'from': account_from['address'],
     'nonce': web3.eth.getTransactionCount(account_from['address']),
-    'gas': 2000000,
-    'gasPrice': web3.toWei('30', 'gwei'),
+    'gasPrice': web3.toWei('505', 'gwei'),
 })
 
 
@@ -124,8 +121,7 @@ def reveal(web3, account_from, contract):
     tx_dict = contract.functions.reveal().buildTransaction({
     'from': account_from['address'],
     'nonce': web3.eth.getTransactionCount(account_from['address']),
-    'gas': 2000000,
-    'gasPrice': web3.toWei('30', 'gwei'),
+    'gasPrice': web3.toWei('505', 'gwei'),
 })
 
 # sign transaction

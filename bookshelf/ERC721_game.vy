@@ -1,5 +1,6 @@
-# @dev Implementation of ERC-721 non-fungible token standard with Rock Paper Scissors Game logic.
-# @OG author Ryuya Nakamura (@nrryuya) | -  @mylife4thehorde - Rock Paper Scissors noob testing off his work :P 
+# @dev Implementation of ERC-721 non-fungible token standard.
+# @author Ryuya Nakamura (@nrryuya)
+# Modified from: https://github.com/vyperlang/vyper/blob/de74722bf2d8718cca46902be165f9fe0e3641dd/examples/tokens/ERC721.vy
 
 from vyper.interfaces import ERC165
 from vyper.interfaces import ERC721
@@ -7,6 +8,7 @@ from vyper.interfaces import ERC721
 implements: ERC721
 implements: ERC165
 
+# Interface for the contract called by safeTransferFrom()
 interface ERC721Receiver:
     def onERC721Received(
             _operator: address,
@@ -15,17 +17,29 @@ interface ERC721Receiver:
             _data: Bytes[1024]
         ) -> bytes4: nonpayable
 
+
+# @dev Emits when ownership of any NFT changes by any mechanism. This event emits when NFTs are
+#      created (`from` == 0) and destroyed (`to` == 0). Exception: during contract creation, any
+#      number of NFTs may be created and assigned without emitting Transfer. At the time of any
+#      transfer, the approved address for that NFT (if any) is reset to none.
+# @param _from Sender of NFT (if address is zero address it indicates token creation).
+# @param _to Receiver of NFT (if address is zero address it indicates token destruction).
+# @param _tokenId The NFT that got transfered.
 event Transfer:
     sender: indexed(address)
     receiver: indexed(address)
     tokenId: indexed(uint256)
 
+# @dev This emits when the approved address for an NFT is changed or reaffirmed. The zero
+#      address indicates there is no approved address. When a Transfer event emits, this also
+#      indicates that the approved address for that NFT (if any) is reset to none.
+# @param _owner Owner of NFT.
+# @param _approved Address that we are approving.
+# @param _tokenId NFT which we are approving.
 event Approval:
     owner: indexed(address)
     approved: indexed(address)
     tokenId: indexed(uint256)
-
-
 
 # @dev This emits when an operator is enabled or disabled for an owner. The operator can manage
 #      all NFTs of the owner.
@@ -39,18 +53,9 @@ event ApprovalForAll:
     approved: bool
 
 
-#@dev This emits when the game result is decided.
-
-event GameResult:
-    winner: indexed(address)
-    player0: indexed(address)
-    player1: indexed(address)
-  
-
-
-
- #@dev Mapping from NFT ID to the address that owns it.
+# @dev Mapping from NFT ID to the address that owns it.
 idToOwner: HashMap[uint256, address]
+
 # @dev Mapping from NFT ID to approved address.
 idToApprovals: HashMap[uint256, address]
 
@@ -62,36 +67,6 @@ ownerToOperators: HashMap[address, HashMap[address, bool]]
 
 # @dev Address of minter, who can mint a token
 minter: address
-
-amountToMint: uint256
-
-
-## Rock Paper Scissors Vyper Game begin 
-
-player0: public(address)
-player1: public(address)
-
-player0Choice: public(uint256)
-player1Choice: public(uint256)
-
-
-
-
-player0ChoiceMade: public(bool)
-player1ChoiceMade: public(bool)
-
-winner: public(address)
-
-choice_legend: public(HashMap[uint256, String[10]]) 
-player0choice_legend: public(String[10])
-player1choice_legend: public(String[10])
-
-deposit_balance: public(uint256)
-name: public(String[100])
-symbol: public(String[100])
-tokenURI: public(String[100])
-totalSupply: public(uint256)
-owner: public(address)
 
 baseURL: String[53]
 
@@ -108,23 +83,9 @@ def __init__():
     """
     @dev Contract constructor.
     """
+    self.minter = msg.sender
     self.baseURL = "https://api.babby.xyz/metadata/"
-    self.player0 = msg.sender
-    self.player1 = 0xE729FAf2146Ba6094Eeb50EF64CAbe9A5d02A7CE
-    self.name = "ROCK PAPER SCISSORS"
-    self.symbol = "RPS"
-    self.totalSupply = 0
-    self.amountToMint = 1
-    self.minter = self 
 
-
-
-### PUBLIC FUNCTIONS ###
-@external
-
-def setPlayer1(_player1: address):
-    self.player1 = _player1
-    
 
 @pure
 @external
@@ -318,6 +279,8 @@ def safeTransferFrom(
     if _to.is_contract: # check if `_to` is a contract address
         returnValue: bytes4 = ERC721Receiver(_to).onERC721Received(msg.sender, _from, _tokenId, _data)
         # Throws if transfer destination is a contract which does not implement 'onERC721Received'
+        assert returnValue == method_id("onERC721Received(address,address,uint256,bytes)", output_type=bytes4)
+
 
 @external
 @payable
@@ -362,7 +325,6 @@ def setApprovalForAll(_operator: address, _approved: bool):
 
 ### MINT & BURN FUNCTIONS ###
 
-
 @external
 def mint(_to: address, _tokenId: uint256) -> bool:
     """
@@ -384,7 +346,6 @@ def mint(_to: address, _tokenId: uint256) -> bool:
     return True
 
 
-
 @external
 def burn(_tokenId: uint256):
     """
@@ -404,110 +365,7 @@ def burn(_tokenId: uint256):
     log Transfer(owner, empty(address), _tokenId)
 
 
-
-
-@internal
-def _resetChoices():
-    self.player0Choice = 4
-    self.player1Choice = 4
-    self.player0ChoiceMade = False
-    self.player1ChoiceMade = False
-
-
-# deposit function that checks if the player is one of the two players.
+@view
 @external
-@payable
-def deposit():
-    self.deposit_balance += msg.value
-    assert msg.sender == self.player0 or msg.sender == self.player1
-
-
-# reward depositors 
-@internal
-@payable
-def reward():
-
-
-    send(self.winner, self.deposit_balance)
-    self.deposit_balance = 0
-    # mint an NFT to the winner
-    amountToMint: uint256 = 1 
-    self.totalSupply += amountToMint
-    self._addTokenTo(self.winner, self.totalSupply)
-    log Transfer(empty(address), self.winner, self.totalSupply)
-    log GameResult(self.winner, self.player0, self.player1)
-    # add the record to the nft tokenid
-
-
-
-# make a choice in the game, and save the choices made.
-@external
-def makeChoice(_choice: uint256):
-    if msg.sender == self.player0:
-        self.player0Choice = _choice
-        self.player0ChoiceMade = True
-        self.player0choice_legend = self.choice_legend[_choice] 
-    elif msg.sender == self.player1:
-        self.player1Choice = _choice
-        self.player1ChoiceMade = True
-        self.player1choice_legend = self.choice_legend[_choice]
-
-
-# calculate store and winner address + pay out rewards
-@external
-def reveal():
-    if self.player0ChoiceMade and self.player1ChoiceMade:
-        if self.player0Choice == self.player1Choice:
-            self.winner = empty(address)
-            self._resetChoices()
-        elif self.player0Choice == 0 and self.player1Choice == 1:
-            self.winner = self.player1
-            self._resetChoices()
-            self.reward()
-        elif self.player0Choice == 0 and self.player1Choice == 2:
-            self.winner = self.player0
-            self._resetChoices()
-            self.reward()
-        elif self.player0Choice == 1 and self.player1Choice == 0:
-            self.winner = self.player0
-            self._resetChoices()
-            self.reward()
-        elif self.player0Choice == 1 and self.player1Choice == 2:
-            self.winner = self.player1
-            self._resetChoices()
-            self.reward()
-        elif self.player0Choice == 2 and self.player1Choice == 0:
-            self.winner = self.player1
-            self._resetChoices()
-            self.reward()
-        elif self.player0Choice == 2 and self.player1Choice == 1:
-            self.winner = self.player0
-            self._resetChoices()
-            self.reward()
-        elif self.player1Choice == 0 and self.player0Choice == 2:
-            self.winner = self.player1
-            self._resetChoices()
-            self.reward()
-        elif self.player1Choice == 0 and self.player0Choice == 1:
-            self.winner = self.player0
-        elif self.player1Choice == 1 and self.player0Choice == 0:
-            self.winner = self.player1
-            self._resetChoices()
-            self.reward()
-        elif self.player1Choice == 1 and self.player0Choice == 2:
-            self.winner = self.player0
-            self._resetChoices()
-            self.reward()
-        elif self.player1Choice == 2 and self.player0Choice == 0:
-            self.winner = self.player0
-            self._resetChoices()
-            self.reward()
-        elif self.player1Choice == 2 and self.player0Choice == 1:
-            self.winner = self.player1
-            self._resetChoices()
-            self.reward()
-        else:
-            self.winner = empty(address)
-            self._resetChoices()
-                      
-   
+def tokenURI(tokenId: uint256) -> String[132]:
+    return concat(self.baseURL, uint2str(tokenId))

@@ -20,7 +20,6 @@ web3.middleware_onion.inject(geth_poa_middleware, layer=0)
 
 
 
-
 ## load contract from address
 
 contract_address = '0x2219854cb694B74559810bfbb22d451264911c72' # Put your contract's address here
